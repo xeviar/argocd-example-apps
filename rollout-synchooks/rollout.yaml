@@ -14,6 +14,8 @@ spec:
     metadata:
       labels:
         app: rollout-bluegreen
+      annotations:
+        restart: asdf
     spec:
       containers:
       - name: rollouts-demo
