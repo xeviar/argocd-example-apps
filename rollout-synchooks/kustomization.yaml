@@ -5,3 +5,4 @@ resources:
 - rollout.yaml
 #- pre-sync-job.yaml
 - post-sync-job.yaml
+- analysis-template.yaml

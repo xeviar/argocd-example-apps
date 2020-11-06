@@ -3,19 +3,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: rollout-bluegreen
+  name: rollout-canary
 spec:
   replicas: 2
   revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: rollout-bluegreen
+      app: rollout-canary
   template:
     metadata:
       labels:
-        app: rollout-bluegreen
-      annotations:
-        restart: asdf
+        app: rollout-canary
     spec:
       containers:
       - name: rollouts-demo
@@ -23,51 +21,24 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
-        # slow down the start/stop of pods so our pod count checks will not flake
-        lifecycle:
-            postStart:
-              exec:
-                command: [sleep, "30"]
-            preStop:
-              exec:
-                command: [sleep, "30"]
-  
   strategy:
-    blueGreen:
-      # activeService specifies the service to update with the new template hash at time of promotion.
-      # This field is mandatory for the blueGreen update strategy.
-      activeService: rollout-bluegreen-active
-      # previewService specifies the service to update with the new template hash before promotion.
-      # This allows the preview stack to be reachable without serving production traffic.
-      # This field is optional.
-      previewService: rollout-bluegreen-preview
-      # autoPromotionEnabled disables automated promotion of the new stack by pausing the rollout
-      # immediately before the promotion. If omitted, the default behavior is to promote the new
-      # stack as soon as the ReplicaSet are completely ready/available.
-      # Rollouts can be resumed using: `kubectl argo rollouts resume ROLLOUT`
-      #autoPromotionEnabled: false
+    canary:
+      steps:
+      - analysis:
+          templates:
+          - templateName: sleep-job
+          args:
+          - name: duration
+            value: 1h
 
 ---
 kind: Service
 apiVersion: v1
 metadata:
-  name: rollout-bluegreen-active
+  name: rollout-canary
 spec:
   selector:
-    app: rollout-bluegreen
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 8080
-
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: rollout-bluegreen-preview
-spec:
-  selector:
-    app: rollout-bluegreen
+    app: rollout-canary
   ports:
   - protocol: TCP
     port: 80
